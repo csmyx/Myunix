@@ -5,7 +5,10 @@ GPPPARAMS = -m32 -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-rtti -fno-excep
 ASPARAMS = --32
 LDPARAMS = -melf_i386
 
-objects = $(wildcard ${DIR_SRC}/*.o)
+objects = src/kernel.o \
+		  src/loader.o \
+		  src/gdt.o \
+		  src/port.o \
 
 %.o: %.cpp
 	g++ $(GPPPARAMS) -o $@ -c $<
@@ -20,7 +23,6 @@ install: mykernel.bin
 	sudo cp $< /boot/mykernel.bin
 
 mykernel.iso: mykernel.bin
-	rm -rf iso
 	mkdir iso
 	mkdir iso/boot
 	mkdir iso/boot/grub
@@ -33,7 +35,12 @@ mykernel.iso: mykernel.bin
 	echo '	boot' >> iso/boot/grub/grub.cfg
 	echo '}' >> iso/boot/grub/grub.cfg
 	grub-mkrescue --output=$@ iso
+	rm -rf iso
 
 run: mykernel.iso
 	(VBoxManage controlvm "Myunix" poweroff && sleep 1) || true
 	VBoxManage startvm "Myunix" &
+
+.PHONY: clean
+clean:
+	rm -rf mykernel.bin
